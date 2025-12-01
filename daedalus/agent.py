@@ -3,6 +3,7 @@ from google.adk.models.google_llm import Gemini
 from google.genai.types import HttpRetryOptions
 
 from daedalus.src.agent_persona import DAEDALUS_PERSONA
+from daedalus.src.agent_tools import get_payment_link, generate_prompts, generate_calendar
 
 retry_config=HttpRetryOptions(
     attempts=5,  # Maximum retry attempts
@@ -19,5 +20,5 @@ root_agent = Agent(
     name='daedalus',
     description='Daedalus, a experienced designer at Invysia',
     instruction=DAEDALUS_PERSONA,
-    tools=[],
+    tools=[get_payment_link, generate_prompts, generate_calendar],
 )

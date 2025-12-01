@@ -62,8 +62,8 @@ def fill_questionnaire(question: str, answer: str, tool_context: ToolContext) ->
     Returns:
         A confirmation message.
     """
-    session_state = tool_context.session_state
-    questionnaire = session_state.get("questionnaire", [])
+    session_state = tool_context.state
+    questionnaire = session_state.get("user:questionnaire", [])
     questionnaire.append({"question": question, "answer": answer})
-    session_state["questionnaire"] = questionnaire
+    session_state["user:questionnaire"] = questionnaire
     return {"status": "success"}
