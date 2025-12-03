@@ -9,7 +9,10 @@ from google import genai
 from google.genai import types
 from google.adk.tools.tool_context import ToolContext
 from google.adk.tools import AgentTool
-from daedalus.src.sub_agents import prompt_generator
+from .sub_agents import prompt_generator
+import logging
+
+logger = logging.getLogger(__name__)
 
 client = genai.Client(
     api_key=os.environ["GOOGLE_API_KEY"],
@@ -41,6 +44,7 @@ async def generate_prompts(
     """
 
     # 1. Wrap the agent as a tool
+    logger.info(f"Generating prompts for theme: {theme}")
     agent_tool = AgentTool(agent=prompt_generator)
 
     # 2. Call the agent as a tool
@@ -67,8 +71,9 @@ async def generate_prompts(
                 prompts = [str(p) for p in parsed]
             else:
                 prompts = [raw_output]
-        except Exception:
+        except Exception as e:
             # Fallback: single big string
+            logger.warning(f"Failed to parse prompt output as list: {e}. Using raw output.")
             prompts = [raw_output]
     else:
         # Very defensive fallback:
@@ -98,7 +103,10 @@ async def generate_calendar(
     prompts = tool_context.state.get("user:prompts", [])
     
     if not prompts or len(prompts) != 12:
+        logger.error(f"Invalid number of prompts found: {len(prompts) if prompts else 0}")
         return "Error: Could not find exactly 12 prompts in user state. Please generate prompts first."
+
+    logger.info(f"Starting calendar generation with {len(prompts)} prompts")
 
     # Generate output folder name with random 3-digit number
     output_folder = f"output_{random.randint(100, 999)}"
@@ -123,6 +131,7 @@ async def generate_calendar(
         try:
             template_image = Image.open(template_path)
         except FileNotFoundError:
+             logger.error(f"Template file not found: {template_path}")
              return f"Error: Template file not found at {template_path}. Please check aspect ratio and template files."
 
         prompt_contents = [prompt, template_image]
@@ -148,8 +157,10 @@ async def generate_calendar(
             failures.append(f"Image {i}: {str(result)}")
     
     if failures:
+        logger.error(f"Calendar generation completed with errors: {failures}")
         return f"Calendar generation completed with some errors:\n" + "\n".join(failures) + f"\nOutput folder: {output_folder}"
 
+    logger.info(f"Calendar generation completed successfully in {output_folder}")
     return f"Calendar generated successfully in folder: {output_folder}"
 
 
@@ -187,11 +198,13 @@ async def generate_images_gemini_3_pro(prompt_contents: list[str], aspect_ratio:
         except Exception as e:
             if attempt < max_retries - 1:
                 print(f"API call failed (attempt {attempt + 1}/{max_retries}): {e}")
+                logger.warning(f"API call failed (attempt {attempt + 1}/{max_retries}): {e}")
                 print(f"Retrying in {retry_delay} seconds...")
                 await asyncio.sleep(retry_delay)
                 retry_delay *= 2  # Exponential backoff
             else:
                 print(f"API call failed after {max_retries} attempts: {e}")
+                logger.error(f"API call failed after {max_retries} attempts: {e}")
 
     if success:
         for part in response.parts:

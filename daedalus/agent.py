@@ -2,8 +2,11 @@ from google.adk.agents.llm_agent import Agent
 from google.adk.models.google_llm import Gemini
 from google.genai.types import HttpRetryOptions
 
-from daedalus.src.agent_persona import DAEDALUS_PERSONA
-from daedalus.src.agent_tools import get_payment_link, generate_prompts, generate_calendar
+import logging
+logger = logging.getLogger(__name__)
+
+from .src.agent_persona import DAEDALUS_PERSONA
+from .src.agent_tools import get_payment_link, generate_prompts, generate_calendar
 
 retry_config=HttpRetryOptions(
     attempts=5,  # Maximum retry attempts
@@ -22,3 +25,5 @@ root_agent = Agent(
     instruction=DAEDALUS_PERSONA,
     tools=[get_payment_link, generate_prompts, generate_calendar],
 )
+
+logger.info("Daedalus agent initialized")

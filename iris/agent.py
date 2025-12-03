@@ -2,14 +2,19 @@ from google.adk.agents.llm_agent import Agent
 from google.adk.models.google_llm import Gemini
 from google.genai.types import HttpRetryOptions
 
+import logging
+from .src import logging as iris_logging
+
+logger = logging.getLogger(__name__)
+
 from daedalus.agent import root_agent as daedalus_agent
 
-from iris.src.agent_tools import (
+from .src.agent_tools import (
     get_infographic,
     fill_questionnaire,
 )
 
-from iris.src.agent_persona import IRIS_PERSONA
+from .src.agent_persona import IRIS_PERSONA
 
 retry_config=HttpRetryOptions(
     attempts=5,  # Maximum retry attempts
@@ -29,3 +34,5 @@ root_agent = Agent(
     tools=[get_infographic, fill_questionnaire],
     sub_agents=[daedalus_agent],
 )
+
+logger.info("Iris agent initialized")

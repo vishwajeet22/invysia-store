@@ -1,0 +1,12 @@
+[project]
+name = "invysia-store"
+version = "0.1.0"
+description = "Invysia Store Agents"
+dependencies = [
+    "google-adk",
+    "google-genai",
+    "pillow",
+]
+
+[tool.setuptools.packages.find]
+include = ["iris*", "daedalus*"]

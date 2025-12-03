@@ -1,6 +1,9 @@
 from google.genai.types import Part
 from pathlib import Path
 from google.adk.tools import ToolContext
+import logging
+
+logger = logging.getLogger(__name__)
 
 async def get_infographic(process_name: str, tool_context: ToolContext) -> dict:
     """
@@ -21,8 +24,10 @@ async def get_infographic(process_name: str, tool_context: ToolContext) -> dict:
     }
     
     if process_name not in infographic_map:
+        logger.error(f"Unsupported process name: {process_name}")
         raise ValueError(f"Unsupported process name for infographic: {process_name}")
     
+    logger.info(f"Retrieving infographic for: {process_name}")
     image_path = infographic_map[process_name]
     
     # Check if file exists locally
@@ -36,6 +41,7 @@ async def get_infographic(process_name: str, tool_context: ToolContext) -> dict:
         import requests
         response = requests.get("https://fastly.picsum.photos/id/156/800/600.jpg")
         response.raise_for_status()
+        logger.warning(f"Using placeholder image for {process_name}")
         image_bytes = response.content
         mime_type = "image/jpeg"
     # Create Part with inline_data
@@ -66,4 +72,5 @@ def fill_questionnaire(question: str, answer: str, tool_context: ToolContext) ->
     questionnaire = session_state.get("user:questionnaire", [])
     questionnaire.append({"question": question, "answer": answer})
     session_state["user:questionnaire"] = questionnaire
+    logger.info(f"Updated questionnaire with question: {question}")
     return {"status": "success"}
